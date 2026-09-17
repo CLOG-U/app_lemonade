@@ -1,0 +1,37 @@
+name: Android CI
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v4
+
+      - name: Configurar Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Verificar permisos de Gradle
+        run: chmod +x gradlew
+
+      - name: Ejecutar pruebas, compilar y renderizar capturas
+        run: ./gradlew testDebugUnitTest assembleDebug recordPaparazziDebug
+
+      - name: Guardar capturas
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: capturas-lemonade
+          path: app/src/test/snapshots/images/*.png
+          if-no-files-found: error
+          retention-days: 30
